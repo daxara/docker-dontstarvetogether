@@ -1,5 +1,5 @@
 FROM steamcmd/steamcmd:ubuntu
-MAINTAINER DST Academy <support@dst.academy>
+LABEL DST Academy <support@dst.academy>
 
 # Set build arguments.
 ARG DST_HOME
@@ -51,10 +51,10 @@ RUN set -x \
 	; fi
 
 # Copy common scripts.
-COPY /script/* /usr/local/bin/
+COPY /build/script/* /usr/local/bin/
 
 # Copy static files.
-COPY /static $DSTA_HOME
+COPY /build/static $DSTA_HOME
 
 # Create pipe for the game console.
 RUN set -x \
@@ -62,7 +62,7 @@ RUN set -x \
 	&& mkdir -p $(dirname $CLUSTER_PATH)
 
 # Copy entrypoint script.
-COPY /docker-entrypoint.sh /
+COPY /build/docker-entrypoint.sh /
 
 # Set up healthcheck.
 HEALTHCHECK --start-period=15m --interval=5m --timeout=1m --retries=3 CMD dst-server version --check
@@ -72,4 +72,4 @@ VOLUME ["$CLUSTER_PATH"]
 
 # Set entrypoint and default command.
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["dst-server", "start"]
+CMD ["dst-server", "update"]
