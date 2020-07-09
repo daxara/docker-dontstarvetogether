@@ -1,4 +1,4 @@
-FROM steamcmd:ubuntu
+FROM steamcmd/steamcmd:ubuntu
 MAINTAINER DST Academy <support@dst.academy>
 
 # Set build arguments.
