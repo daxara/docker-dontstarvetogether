@@ -1,5 +1,36 @@
-FROM dstacademy/steamcmd:0.4
+FROM ubuntu:18
 MAINTAINER DST Academy <support@dst.academy>
+
+# Set build arguments.
+ARG STEAM_USER
+ENV STEAM_USER ${STEAM_USER:-"steam"}
+ARG STEAM_HOME
+ENV STEAM_HOME ${STEAM_HOME:-"/opt/steam"}
+ARG STEAM_URL
+ENV STEAM_URL ${STEAM_URL:-"https://cdn.steamstatic.com/client/installer/steamcmd_linux.tar.gz"}
+
+# Add our user/group first to ensure their IDs get set consistently.
+RUN groupadd -r $STEAM_USER && useradd -rm -d $STEAM_HOME -g $STEAM_USER $STEAM_USER
+
+# Install everything.
+RUN set -x \
+
+	# Install dependencies.
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends wget ca-certificates gnupg2 dirmngr lib32gcc1 \
+
+	# Install SteamCMD.
+	&& wget -qO- $STEAM_URL | su $STEAM_USER tar -xzvC $STEAM_HOME \
+	&& su $STEAM_USER $STEAM_HOME/steamcmd.sh \
+		+@ShutdownOnFailedCommand 1 \
+		+quit \
+	&& rm -rf $STEAM_HOME/Steam/logs $STEAM_HOME/Steam/appcache/httpcache \
+	&& find $STEAM_HOME/package -type f ! -name "steam_cmd_linux.installed" ! -name "steam_cmd_linux.manifest" -delete \
+
+	# Clean up.
+	&& apt-get purge -y --auto-remove wget gnupg2 dirmngr \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install dependencies.
 RUN set -x \
@@ -38,7 +69,7 @@ RUN set -x \
 	&& mkdir -p $DST_HOME \
 	&& chown $STEAM_USER:$STEAM_USER $DST_HOME \
 	&& sync \
-	&& gosu $STEAM_USER steamcmd \
+	&& su $STEAM_USER steamcmd \
 		+@ShutdownOnFailedCommand 1 \
 		+login anonymous \
 		+force_install_dir $DST_HOME \
@@ -59,7 +90,7 @@ RUN set -x \
 		   IFS="," \
 		&& for mod in $MODS; do echo "ServerModSetup(\"$mod\")" >> "$DST_HOME/mods/dedicated_server_mods_setup.lua"; done \
 		&& cd "$DST_HOME/bin" \
-		&& gosu $STEAM_USER ./dontstarve_dedicated_server_nullrenderer -only_update_server_mods \
+		&& su $STEAM_USER ./dontstarve_dedicated_server_nullrenderer -only_update_server_mods \
 		&& rm -r "$STEAM_HOME/.klei" \
 	; fi
 
