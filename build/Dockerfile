@@ -20,7 +20,7 @@ RUN set -x \
 	&& apt-get install -y --no-install-recommends wget ca-certificates gnupg2 dirmngr lib32gcc1 \
 
 	# Install SteamCMD.
-	&& wget -qO- $STEAM_URL | su $STEAM_USER tar -xzvC $STEAM_HOME \
+	&& wget -qO- $STEAM_URL | su $STEAM_USER -c 'tar -xzvC $STEAM_HOME' \
 	&& su $STEAM_USER $STEAM_HOME/steamcmd.sh \
 		+@ShutdownOnFailedCommand 1 \
 		+quit \
@@ -69,7 +69,7 @@ RUN set -x \
 	&& mkdir -p $DST_HOME \
 	&& chown $STEAM_USER:$STEAM_USER $DST_HOME \
 	&& sync \
-	&& su $STEAM_USER steamcmd \
+	&& su $STEAM_USER -c 'steamcmd \
 		+@ShutdownOnFailedCommand 1 \
 		+login anonymous \
 		+force_install_dir $DST_HOME \
@@ -77,7 +77,7 @@ RUN set -x \
 			$([ -n "$DST_BRANCH" ] && printf %s "-beta $DST_BRANCH") \
 			$([ -n "$DST_BRANCH_PASSWORD" ] && printf %s "-betapassword $DST_BRANCH_PASSWORD") \
 			validate \
-		+quit \
+		+quit' \
 	&& rm -rf $STEAM_HOME/Steam/logs $STEAM_HOME/Steam/appcache/httpcache \
 	&& find $STEAM_HOME/package -type f ! -name "steam_cmd_linux.installed" ! -name "steam_cmd_linux.manifest" -delete
 
@@ -90,7 +90,7 @@ RUN set -x \
 		   IFS="," \
 		&& for mod in $MODS; do echo "ServerModSetup(\"$mod\")" >> "$DST_HOME/mods/dedicated_server_mods_setup.lua"; done \
 		&& cd "$DST_HOME/bin" \
-		&& su $STEAM_USER ./dontstarve_dedicated_server_nullrenderer -only_update_server_mods \
+		&& su $STEAM_USER -c './dontstarve_dedicated_server_nullrenderer -only_update_server_mods' \
 		&& rm -r "$STEAM_HOME/.klei" \
 	; fi
 
