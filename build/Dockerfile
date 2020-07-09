@@ -72,4 +72,4 @@ VOLUME ["$CLUSTER_PATH"]
 
 # Set entrypoint and default command.
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["dst-server", "update"]
+CMD ["dst-server", "start"]
